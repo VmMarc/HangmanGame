@@ -1,4 +1,3 @@
-/*-------------dico/random------------------*/
 const fs = require('fs')
 const { HANGMAN } = require('./hangman')
 const readlineSync = require('readline-sync')
