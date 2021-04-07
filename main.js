@@ -3,57 +3,64 @@ const { HANGMAN } = require('./hangman')
 const readlineSync = require('readline-sync')
 const chalk = require('chalk')//(a faire)
 const { randomInt } = require('crypto')
+const { alphabet } = require('./alphabet')
 
+/*-------------------------------------------Preset-----------------------------------------*/ 
+//check si le fichier dict exist + si c'est bien un fichier
 
-/*lire le fichier dict.txt et le découper en tableau 
-+ les lettres de la meme taille(check si fichier existe) */
-let dict = fs.readFileSync('./dict.txt', 'utf-8')
+if (process.argv.length !== 3) {
+  console.log(chalk.red.bold('Usage: node main.js "file.txt"'))
+  process.exit(1)
+} else if (!fs.existsSync(process.argv[2])) {
+  console.log(chalk.red.bold(`Error: "${process.argv[2]}" not found.`))
+  process.exit(1)
+}
+
+let stats = fs.statSync(process.argv[2])
+if (!stats.isFile()) {
+  console.log(chalk.red.bold(`Error: "${process.argv[2]}" is not a file.`))
+  process.exit(1)
+}
+
+let dict = fs.readFileSync(`./${process.argv[2]}`, 'utf-8')
 let dictTab = dict.toUpperCase().split('\n')
 
-/*récupérer un mot au hazard de ce tableau 
-+ découpe lettre par lettre*/
 let n = randomInt(0, dictTab.length)
 let secretWord = dictTab[n].split('')
-
-/*crée un tableau vide
-+ crée une boucle qui l'incrémente 
-avec Underscore*/
-
 let guessTab = Array(secretWord.length).fill('_')
 const MAX_CHANCES = 8
 
-//count de chances
-//count pour affiché le pendu 
+/*-------------------------------------------GAME-----------------------------------------*/ 
+// utiliser chalk
 let chances = 1
-let hCount = 0
-//lancement du jeu avec condition de retour
+let count = 0
+
 while (chances !== MAX_CHANCES){
-  console.log(`${HANGMAN[hCount]}  /!\\ ${guessTab.join(' ')} /!\\  -->${chances}/8<-- `)
+  console.log(`${HANGMAN[count]}${chalk.red.bold('  /!\\ ')}${guessTab.join(' ')}${chalk.red(' /!\\  ')}${chalk.red.bold('-->')}${chances}/8${chalk.red.bold('<--')} `)
 
-  //récup de la lettre avec readline(check a faire)
   let guessLetter = ''
-  guessLetter = readlineSync.question('What\'s your guess? ').toUpperCase()
+  guessLetter = readlineSync.question(chalk.blue('What\'s your guess? ')).toUpperCase()
+  while ((!(alphabet().includes(guessLetter))) || (guessLetter.length !== 1)){
+    guessLetter = readlineSync.question(`${chalk.red.bold('Error: Only one letter from the alphabet.')}\n${chalk.blue('What\'s your guess? ').toUpperCase()}`)
+  }
 
-  //boucle qui incrémente le tableau "vide" si la lettre correspond bien
   for (let i = 0; i < secretWord.length; i++){
     secretWord[i] === guessLetter ? guessTab[i] = guessLetter : ''
   }
 
-  // condition bonne/mauvaise réponse et incrémentation
   if (secretWord.includes(guessLetter)){
-    console.log('\n\tGood Guess!')
+    console.log(chalk.blue.bold('\n\tGood Guess!'))
   } else {
-    console.log('\n\tBad guess...')
+    console.log(chalk.red.bold('\n\tBad guess...'))
     chances++
-    hCount++
+    count++
   }
-  //condition de victoire/defaite
+
   if (chances === MAX_CHANCES){
-    console.log(`\t-->${chances}/8<--\n\tGAME OVER !`)
-    process.exit
+    console.log(chalk.red.underline(`\t-->${chances}/8<--\n\tGAME OVER !`))
+    process.exit(1)
   } else if (secretWord.join('') === guessTab.join('')) {
-    console.log(`\n\tYOU WIN!\n-->${secretWord.join('')} is the Bad Guy you\'r looking for ;)`)
+    console.log(`\n\t${chalk.green.underline('YOU WIN!')}\n-->${secretWord.join('')} is the Bad Guy you where looking for !`)
+    process.exit(1)
   }
 }
-
-//il manque encore les checks
